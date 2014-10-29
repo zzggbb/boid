@@ -8,12 +8,12 @@ $(document).ready(function() {
             'height': window.innerHeight
         },
         'boid': {
-            'count': 50,
+            'count': 100,
             'size': 10,
             'max_velocity': 4
         },
         'avoid_distance': 10,
-        'velocity_adjust': 8
+        'velocity_adjust': 2
     }
 
     $('body').append(
@@ -78,9 +78,9 @@ $(document).ready(function() {
         // return a vector that is the sum of all applied rules
         total = vector.zero()
         for (var key in rules) { 
-            rule = rules[key]; console.log(rule)
-            weight = rule.weight; console.log(weight)
-            result = rule.result(me,boids); console.log(result)
+            rule = rules[key]
+            weight = rule.weight
+            result = rule.result(me,boids)
             partial = vector.product(result, weight)
             total = vector.add(total, partial)
         }
@@ -121,9 +121,12 @@ $(document).ready(function() {
             return pos
         },
         'speed_limit': function(boid) {
-            if ( vector.magnitude(boid.vel) > cfg.boid.max_velocity) {
-            
+            mag = vector.magnitude(boid.vel)
+            lim = cfg.boid.max_velocity
+            if ( mag > lim ) {
+                boid.vel = vector.product( vector.quotient(boid.vel, mag), lim) 
             }
+            return boid
         },
         'draw': function(boid) {
             ctx.fillStyle = boid.color
@@ -164,7 +167,7 @@ $(document).ready(function() {
             ctx.canvas.height = cfg.canvas.height
             cfg.debug && console.log(boids[0].pos)
             
-            boids.map(function(b) {return boid.draw(boid.move(b))})
+            boids.map(function(b) {return boid.draw(boid.speed_limit(boid.move(b)))})
         },
         'init': function() {
             setInterval(this.loop, cfg.loop_interval)
