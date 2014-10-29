@@ -12,8 +12,8 @@ $(document).ready(function() {
             'size': 10,
             'max_velocity': 4
         },
-        'avoid_distance': 10,
-        'velocity_adjust': 2
+        'avoid_distance': 2,
+        'velocity_adjust': 100
     }
 
     $('body').append(
@@ -22,6 +22,7 @@ $(document).ready(function() {
             'width': cfg.canvas.width,
             'height': cfg.canvas.height,
         })
+    ).append(
     )
     
     ctx = $('#canvas')[0].getContext('2d')
@@ -40,7 +41,7 @@ $(document).ready(function() {
                 adjust = vector.quotient(distance,100)
                 return adjust
             },
-            'weight': 1
+            'weight': 0.1
         },
         'avoid': {
             'result': function(me, boids) {
@@ -56,7 +57,7 @@ $(document).ready(function() {
                 adjust = vector.diff(vector.zero(), vector.sum(displacements))
                 return adjust
             },
-            'weight': 1
+            'weight': 5
         },
         'speed': {
             'result': function(me,boids) {
@@ -166,7 +167,6 @@ $(document).ready(function() {
             ctx.canvas.width = cfg.canvas.width
             ctx.canvas.height = cfg.canvas.height
             cfg.debug && console.log(boids[0].pos)
-            
             boids.map(function(b) {return boid.draw(boid.speed_limit(boid.move(b)))})
         },
         'init': function() {

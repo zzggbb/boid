@@ -3,3 +3,8 @@ html, body {
     height: 100%;
     margin: 0px;
 }
+#control {
+    width: 50%;
+    height: 100%;
+    background-color: red;
+}
