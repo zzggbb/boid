@@ -8,11 +8,11 @@ $(document).ready(function() {
             'height': window.innerHeight
         },
         'boid': {
-            'count': 100,
+            'count': 50,
             'size': 10,
-            'velocity_magnitude': 4
+            'max_velocity': 4
         },
-        'avoid_distance': 30,
+        'avoid_distance': 10,
         'velocity_adjust': 8
     }
 
@@ -26,70 +26,9 @@ $(document).ready(function() {
     
     ctx = $('#canvas')[0].getContext('2d')
 
-    rand = {
-        'integer': function(min, max) {
-            return Math.floor(Math.random() * (max - min)) + min;
-        },
-        'color': function() {
-            white = Math.pow(16,6) - 1
-            return this.integer(0, white).toString(16) 
-        },
-        'choice' : function(items) {
-            return items[Math.floor(items.length * Math.random())]
-        }
-    }
-    scalar = {
-        'sum' : function(items) {
-            return items.reduce(this.add, 0)
-        },
-        'add': function(a, b) {
-            return a+b
-        },
-        'mean' : function(nums) {
-            return this.sum(nums) / nums.length
-        }
-    }
-    vector =  {
-        'make': function(x, y) {
-            return {
-                'x': x,
-                'y': y
-            }
-        }, 
-        'zero': function() { return this.make(0, 0) },
-        'sum': function (vectors) {
-            return vectors.reduce(this.add, this.zero())
-        },
-        'add': function(v1, v2) {
-            return this.make(v1.x + v2.x, v1.y + v2.y)
-        },
-        'diff': function(v1, v2) {
-            return this.make(v1.x - v2.x, v1.y - v2.y)
-        },
-        'quotient': function(v, s) {
-            return this.make(v.x / s, v.y / s)
-        },
-        'product': function(v, s) {
-            return this.make(v.x * s, v.y * s)
-        },
-        'mean': function(vectors) {
-            resultant = this.sum(vectors)
-            len = vectors.length
-            mean = this.quotient(resultant, len)
-            return mean
-        },
-        'equal': function(v1, v2) {
-            return v1.x == v2.x && v1.y == v2.y
-        },
-        'distance': function(v1, v2) {
-            xs = Math.pow(v2.x - v1.x , 2)
-            ys = Math.pow(v2.y - v1.y , 2)
-            return Math.sqrt(xs+ys)
-        } 
-    }
     rules = {
         'huddle': {
-            'vector' : function(me,boids) {
+            'result' : function(me,boids) {
                 unique = boids.filter(function(i) {
                     return !vector.equal(me.pos,i.pos)
                 })
@@ -104,7 +43,7 @@ $(document).ready(function() {
             'weight': 1
         },
         'avoid': {
-            'vector': function(me, boids) {
+            'result': function(me, boids) {
                 unique = boids.filter(function(i) {
                     return !vector.equal(me.pos,i.pos)
                 }) 
@@ -114,13 +53,13 @@ $(document).ready(function() {
                 displacements = neighbors.map(function(i) {
                     return vector.diff(i.pos, me.pos)
                 })
-                adjust = vector.diff({'x':0,'y':0}, vector.sum(displacements))
+                adjust = vector.diff(vector.zero(), vector.sum(displacements))
                 return adjust
             },
             'weight': 1
         },
         'speed': {
-            'vector': function(me,boids) {
+            'result': function(me,boids) {
                 unique = boids.filter(function(i) {
                     return !vector.equal(me.vel, i.vel)
                 })
@@ -129,26 +68,61 @@ $(document).ready(function() {
                 })
                 pace = vector.mean(velocities)
                 adjust = vector.quotient(vector.diff(pace,me.vel), cfg.velocity_adjust)
-                cfg.debug && console.log(me,adjust)
                 return adjust
             },
             'weight': 1
         }
     }
+    
+    apply_rules = function(me,boids,rules) {
+        // return a vector that is the sum of all applied rules
+        total = vector.zero()
+        for (var key in rules) { 
+            rule = rules[key]; console.log(rule)
+            weight = rule.weight; console.log(weight)
+            result = rule.result(me,boids); console.log(result)
+            partial = vector.product(result, weight)
+            total = vector.add(total, partial)
+        }
+        return total
+    }
 
     boid = {
         'make': function() {
             return {
-                'color': '#' + rand.color(),
+                'color': rand.color(),
                 'pos': {
                     'x': rand.integer(0,cfg.canvas.width),
                     'y': rand.integer(0,cfg.canvas.height),
                 },
                 // ensure non-zero velocity
                 'vel': {
-                    'x': rand.integer(1,cfg.boid.velocity_magnitude) * rand.choice([-1,1]),
-                    'y': rand.integer(1,cfg.boid.velocity_magnitude) * rand.choice([-1,1])
+                    'x': rand.integer(1,cfg.boid.max_velocity) * rand.choice([-1,1]),
+                    'y': rand.integer(1,cfg.boid.max_velocity) * rand.choice([-1,1])
                 }
+            }
+        },
+        'makeall' : function(count) {
+            return Array.apply(null,Array(count)).map(this.make)
+        },
+        'check': function(pos) {
+            if (pos.x > cfg.canvas.width) {
+                pos.x = 0
+            }
+            if (pos.x < 0) {
+                pos.x = cfg.canvas.width
+            }
+            if (pos.y > cfg.canvas.height) {
+                pos.y = 0
+            }
+            if (pos.y < 0) {
+                pos.y = cfg.canvas.height
+            }
+            return pos
+        },
+        'speed_limit': function(boid) {
+            if ( vector.magnitude(boid.vel) > cfg.boid.max_velocity) {
+            
             }
         },
         'draw': function(boid) {
@@ -157,6 +131,7 @@ $(document).ready(function() {
 
             ctx.fill();
             //ctx.rotate(-1 * Math.atan2(boid.vel.y, boid.vel.x))
+            //console.log(this)
             return boid
         },
         'move': function(boid) {
@@ -170,24 +145,15 @@ $(document).ready(function() {
                 should be the sum of all `rules` applied to the current 
                 `boid` and its surrounding `boids`
             */
-            resultant = vector.zero()
+
+            //resultant = vector.zero()
+            resultant = apply_rules(boid,boids,rules)
             boid.vel = vector.add(boid.vel, resultant)
-            boid.pos = vector.add(boid.pos, boid.vel)
-            if (boid.pos.x > cfg.canvas.width) {
-                boid.pos.x = 0
-            }
-            if (boid.pos.x < 0) {
-                boid.pos.x = cfg.canvas.width
-            }
-            if (boid.pos.y > cfg.canvas.height) {
-                boid.pos.y = 0
-            }
-            if (boid.pos.y < 0) {
-                boid.pos.y = cfg.canvas.height
-            }
-        },
+            boid.pos = this.check(vector.add(boid.pos, boid.vel))
+            return boid
+        }
     }
-    boids = Array.apply(null,Array(cfg.boid.count)).map(boid.make)
+    boids = boid.makeall(cfg.boid.count)
     
     main = {
         'loop': function() {
@@ -198,7 +164,7 @@ $(document).ready(function() {
             ctx.canvas.height = cfg.canvas.height
             cfg.debug && console.log(boids[0].pos)
             
-            boids.map(boid.draw).map(boid.move)
+            boids.map(function(b) {return boid.draw(boid.move(b))})
         },
         'init': function() {
             setInterval(this.loop, cfg.loop_interval)
