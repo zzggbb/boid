@@ -17,7 +17,7 @@ $(document).ready(function() {
     }
 
     $('body').append(
-        $('<canvas>').attr(cfg.canvas).id('canvas')
+        $('<canvas>').attr(cfg.canvas).attr('id','canvas')
     ).append(
     )
     
