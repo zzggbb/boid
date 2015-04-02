@@ -6,19 +6,65 @@ $(document).ready(function() {
         'canvas': {
             'width': window.innerWidth / 2,
             'height': window.innerHeight
+        }
+    }
+    controlled = {
+        'count': {
+            'n': 100,
+            'label': 'amount of boids'
         },
-        'boid': {
-            'count': 100,
-            'size': 10,
-            'max_velocity': 4
+        'size': {
+            'n': 10,
+            'label': 'boid size in pixels'
         },
-        'avoid_distance': 2,
-        'velocity_adjust': 100
+        'max_velocity': {
+            'n': 4,
+            'label': 'maximum velocity that a boid is allowed to travel at' 
+        },
+        'avoid_distance': {
+            'n': 2,
+            'label': 'distance that boids will try to maintain from eachother'
+        },
+        'velocity_adjust': {
+            'n': 100,
+            'label': 'scale that velocity is reduced by'
+        }
+    }
+    
+    controls = {
+        'count': function(n) {
+            controlled.count.n = n;    
+            boids = boid.makeall(controlled.count.n)
+        },
+        'size': function(n) {
+            controlled.size.n = n;    
+        },
+        'max_velocity': function(n) {
+            controlled.max_velocity.n = n;    
+        },
+        'avoid_distance': function(n){ 
+            controlled.avoid_distance.n = n; 
+        }
+    }
+
+    create_control = function(name) {
+        return $('<div>').attr('id','control').append(
+            $('<div>').attr('id','label').text(controlled[name].label)
+        ).append(
+        
+        )       
     }
 
     $('body').append(
-        $('<canvas>').attr(cfg.canvas).attr('id','canvas')
-    ).append(
+        $('<div>').attr('id','page-wrap').append(
+            $('<div>').attr('id','canvas-wrap').append(
+                $('<canvas>').attr(cfg.canvas).attr('id','canvas')
+            )
+        ).append(
+            $('<div>').attr('id','controls').append(
+                Object.keys(controlled).map(create_control)
+            )
+        ) 
     )
     
     ctx = $('#canvas')[0].getContext('2d')
@@ -45,7 +91,7 @@ $(document).ready(function() {
                     return !vector.equal(me.pos,i.pos)
                 }) 
                 neighbors = unique.filter(function(i) { 
-                    return vector.distance(me.pos,i.pos) < cfg.avoid_distance 
+                    return vector.distance(me.pos,i.pos) < controlled.avoid_distance.n 
                 })
                 displacements = neighbors.map(function(i) {
                     return vector.diff(i.pos, me.pos)
@@ -64,7 +110,7 @@ $(document).ready(function() {
                     return i.vel
                 })
                 pace = vector.mean(velocities)
-                adjust = vector.quotient(vector.diff(pace,me.vel), cfg.velocity_adjust)
+                adjust = vector.quotient(vector.diff(pace,me.vel), controlled.velocity_adjust.n)
                 return adjust
             },
             'weight': 1
@@ -94,8 +140,8 @@ $(document).ready(function() {
                 },
                 // ensure non-zero velocity
                 'vel': {
-                    'x': rand.integer(1,cfg.boid.max_velocity) * rand.choice([-1,1]),
-                    'y': rand.integer(1,cfg.boid.max_velocity) * rand.choice([-1,1])
+                    'x': rand.integer(1,controlled.max_velocity.n) * rand.choice([-1,1]),
+                    'y': rand.integer(1,controlled.max_velocity.n) * rand.choice([-1,1])
                 }
             }
         },
@@ -119,7 +165,7 @@ $(document).ready(function() {
         },
         'speed_limit': function(boid) {
             mag = vector.magnitude(boid.vel)
-            lim = cfg.boid.max_velocity
+            lim = controlled.max_velocity.n
             if ( mag > lim ) {
                 boid.vel = vector.product( vector.quotient(boid.vel, mag), lim) 
             }
@@ -127,7 +173,7 @@ $(document).ready(function() {
         },
         'draw': function(boid) {
             ctx.fillStyle = boid.color
-            ctx.fillRect(boid.pos.x,boid.pos.y,cfg.boid.size,cfg.boid.size)
+            ctx.fillRect(boid.pos.x,boid.pos.y,controlled.size.n,controlled.size.n)
 
             ctx.fill();
             //ctx.rotate(-1 * Math.atan2(boid.vel.y, boid.vel.x))
@@ -153,7 +199,7 @@ $(document).ready(function() {
             return boid
         }
     }
-    boids = boid.makeall(cfg.boid.count)
+    boids = boid.makeall(controlled.count.n)
     
     main = {
         'loop': function() {

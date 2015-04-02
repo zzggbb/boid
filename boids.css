@@ -1,10 +1,33 @@
 html, body {
     width: 100%;
     height: 100%;
-    margin: 0px;
+    margin: 0;
+    padding: 0px;
+}
+
+#canvas-wrap, #controls {
+    height: 100%;
+    display: inline-block;
+}
+
+#canvas-wrap {
+    float: left;
+    width: 75%;
+}
+#controls {
+    width: 25%;
+    float: right;
+    background-color: #5295CA;
 }
 #control {
+    background-color: #fff;
+    padding: 5px;
+    margin: 5px;
+}
+#label {
+    background-color: #5295CA;
+    padding: 5px;
+    color: #fff;
     width: 50%;
-    height: 100%;
-    background-color: red;
+    text-align: center;
 }
