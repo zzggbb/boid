@@ -17,11 +17,7 @@ $(document).ready(function() {
     }
 
     $('body').append(
-        $('<canvas>').attr({
-            'id': 'canvas',
-            'width': cfg.canvas.width,
-            'height': cfg.canvas.height,
-        })
+        $('<canvas>').attr(cfg.canvas).id('canvas')
     ).append(
     )
     
