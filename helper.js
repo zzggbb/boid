@@ -21,7 +21,7 @@ scalar = {
         return this.sum(nums) / nums.length
     }
 }
-vector =  {
+vector = {
     'make': function(x, y) {
         return {
             'x': x,
@@ -62,13 +62,6 @@ vector =  {
         return Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2))
     }
 }
-compose = function (fs) {
-    var fns = fs;
-    return function (result) {
-        for (var i = fns.length - 1; i > -1; i--) {
-              result = fns[i].call(this, result);
-        }
-
-        return result;
-    }
+bound = function(x, min, max) {
+    return (x > max) ? min : ((x < min) ? max : x)    
 }
